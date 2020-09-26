@@ -1,10 +1,15 @@
 from datetime import datetime
 from pathlib import Path
+import configparser
+import logging
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Load environement config
+CONFIG = configparser.ConfigParser()
+CONFIG.read(os.path.join(BASE_DIR, 'auto', 'config.ini'))
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -75,6 +80,17 @@ DATABASES = {
     }
 }
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': CONFIG['DATABASE']['ENGINE'],
+#        'NAME': CONFIG['DATABASE']['NAME'],
+#        'USER': CONFIG['DATABASE']['USER'],
+#        'PASSWORD': CONFIG['DATABASE']['PASSWORD'],
+#        'HOST': CONFIG['DATABASE']['HOST'],
+#        'PORT': CONFIG['DATABASE']['PORT'],
+#    }
+#}
+
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -141,7 +157,7 @@ LOGGING = {
     
     'handlers': {
         'console':{
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.StreamHandler',
             'formatter': 'simple'
         },
@@ -173,11 +189,20 @@ LOGGING = {
             'level': 'ERROR',
             'propagate': True,
         },
-        'apps': { 
+        'auto': { 
             'handlers': ['log_file', 'console'],
             'level': 'INFO',
             'propagate': True,
         },
     },
 }
+
+LOGGER = logging.getLogger('auto')
+
+
+
+
+
+
+
 
