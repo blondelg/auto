@@ -3,6 +3,7 @@ from django.conf import settings
 
 from scrapper.scrapper import GetHtmlSession
 from scrapper.scrapper import DataParser
+from scrapper.scrapper import AnnonceListScrapper
 
 
 class GetHtmlSessionTestCase(TestCase):
@@ -20,6 +21,7 @@ Publié depuis : <strong>60 jours</strong>
 Publié depuis : <strong>60 jours</strong>
 </span>
 </div>
+<li class="arrow-btn "><a href="/occasion-voiture-marque-citroen-2.html" title="Page suivante"><i class="cbm-picto--arrowR"></i></a></li>
 """
 
     def test_retuns_text_real_url(self):
@@ -49,7 +51,21 @@ Publié depuis : <strong>60 jours</strong>
     def test_returns_full_dict_if_data_are_ok(self):
     
         self.data_parser = DataParser()
-        self.assertEqual(isinstance(self.data_parser.scrap_lacentrale(self.html_full), dict), True)
+        self.assertNotEqual(len(self.data_parser.scrap_lacentrale(self.html_full)), 0)
+        
+        
+    def test_get_next_page_url(self):
+    
+        self.annonce_list = AnnonceListScrapper(self.real_url)
+        self.assertEqual(isinstance(self.annonce_list.get_next_page_url(self.html_full), str), True)
+        
+        
+    def test_get_next_page_url_last_page(self):
+    
+        self.annonce_list = AnnonceListScrapper(self.real_url)
+        self.assertEqual(self.annonce_list.get_next_page_url(self.html_missing), None)
+        
+
         
         
 

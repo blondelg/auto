@@ -1,3 +1,4 @@
+from datetime import datetime, timedelta
 from fake_useragent import UserAgent
 from django.conf import settings
 from bs4 import BeautifulSoup
@@ -9,6 +10,14 @@ import json
 
 
 
+# Decorator that makes soup from html
+def soup(func):
+    def get_soup(*args, **kwargs):
+        kwargs['soup'] = BeautifulSoup(args[1], "html.parser")
+        return func(*args, **kwargs)
+    return get_soup
+
+
 class GetHtmlSession:
     """ Build session and retrieve html source """
     
@@ -16,10 +25,10 @@ class GetHtmlSession:
         self.proxy_count = 0
         self.proxy_num = 0
         self.url = url
-        self.ua = UserAgent().random
+        self.user_agent = UserAgent().random
         self.status_code = 0
-        self.session_timeout = int(settings.CONFIG['SETTINGS']['session_timeout'])
-        self.max_proxy_try = int(settings.CONFIG['SETTINGS']['max_proxy_try'])
+        self.session_timeout = int(settings.CONFIG['SCRAPPER']['session_timeout'])
+        self.max_proxy_try = int(settings.CONFIG['SCRAPPER']['max_proxy_try'])
         
         # Get proxies
         self.get_proxies()
@@ -41,14 +50,14 @@ class GetHtmlSession:
             session.proxies = {"http": f"http://{self.get_proxy_http()}", 
                                "https": f"https://{self.get_proxy_https()}"}
             headers = requests.utils.default_headers()
-            headers.update({'User-Agent': self.ua},)
+            headers.update({'user_agent': self.user_agent},)
             session.headers = headers
             
             # Submit request
             try:
+                time.sleep(random.randrange(1,5))
                 self.response = requests.get(self.url, timeout=self.session_timeout)
                 self.status_code = self.response.status_code
-                time.sleep(random.randrange(1,5))
                 
             except requests.exceptions.RequestException as err:
                 settings.LOGGER.error(f"request error {err}")
@@ -113,51 +122,91 @@ class GetHtmlSession:
             
 
 class DataParser:
-    """  """
+    """ provides a set of methods to scrap data from an annonce """
     
     def __init__(self):
         pass
         
-    def scrap_lacentrale(self, html):
+    @soup
+    def scrap_lacentrale(self, html, **kwargs):
     
-        soup = BeautifulSoup(html, "html.parser")
         try:
-            json_data = json.loads(soup.find("div", {"id": "trackingStateContainer"}).getText())
-            age = soup.find("div", {"class": "cbm-toolboxButtons"}).span.strong.getText().strip().split(" ")[0]
-            output = {'url': json_data['classified']['url'],
-                    'prix': json_data['vehicle']['price']['price'],
-                    'marque': json_data['vehicle']['make'],
-                    'model': json_data['vehicle']['model'],
-                    'energie': json_data['vehicle']['energy'],
-                    'année': json_data['vehicle']['year'],
-                    'codepostal': json_data['vehicle']['zipcode'],
-                    'puissance': json_data['vehicle']['powerDIN'],
-                    'km': json_data['vehicle']['mileage'],
-                    'age': age}
-            return self.data_parser.scrap_lacentrale(self.html_full)
+            json_data = json.loads(kwargs['soup'].find("div", {"id": "trackingStateContainer"}).getText())
+            age = kwargs['soup'].find("div", {"class": "cbm-toolboxButtons"}).span.strong.getText().strip().split(" ")[0]
+            DATE = datetime.now() - timedelta(days=int(age))
+            output = {'URL': json_data['classified']['url'],
+                    'PRIX': json_data['vehicle']['price']['price'],
+                    'MARQUE': json_data['vehicle']['make'],
+                    'MODELE': json_data['vehicle']['model'],
+                    'ENERGIE': json_data['vehicle']['energy'],
+                    'ANNEE': json_data['vehicle']['year'],
+                    'CODEPOSTAL': json_data['vehicle']['zipcode'],
+                    'DIN': json_data['vehicle']['powerDIN'],
+                    'KM': json_data['vehicle']['mileage'],
+                    'DATE': DATE}
+            return output
                     
         except Exception as err:
             settings.LOGGER.error(f"lacentrale {err}")
             return {}
 
+
+class AnnonceListScrapper:
+    """ From a search url """
+    
+    domain = "https://www.lacentrale.fr{}"
     
     
+    def __init__(self, search_url):
+        self.search_url = search_url
+        self.page_url = []
+        self.ad_url = []
+        
+        self.get_page_urls(search_url)
+        
     
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
-    
+    def get_page_urls(self, url):
+        """ from a given search URL, retrieve all pagination urls """
+        url = self.search_url
+        
+        while url:
+            self.page_url.append(url)
+            session = GetHtmlSession(url)
+            url = self.get_next_page_url(session.get_html_text())
+
+
+          
+    def get_ad_urls(self):
+        """ return a list with urls for all ads """
+        for url in self.page_url:
+            
+        
+        
+    @soup
+    def get_next_page_url(self, html, **kwargs):
+        """ returns url of next page """
+        for e in kwargs['soup'].find_all("li", {"class": "arrow-btn"}):
+            if "suivante" in e.decode_contents():
+                return self.domain.format(e.find("a")['href'])
+        return None
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

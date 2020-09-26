@@ -2,6 +2,7 @@ from datetime import datetime
 from pathlib import Path
 import configparser
 import logging
+import sys
 import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -15,7 +16,7 @@ CONFIG.read(os.path.join(BASE_DIR, 'auto', 'config.ini'))
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'innnn_83vmis72l)s+j#=+7&kluaop!p@j@y70nn0@!)s^9b69'
+SECRET_KEY = CONFIG['GENERAL']['SECRET_KEY']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -33,6 +34,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
+    'annonce',
     'scrapper',
 ]
 
@@ -197,7 +199,13 @@ LOGGING = {
     },
 }
 
+# Disable logger for tests
+if len(sys.argv) > 1 and sys.argv[1] == 'test':
+    logging.disable(logging.CRITICAL)
+    
 LOGGER = logging.getLogger('auto')
+
+
 
 
 
