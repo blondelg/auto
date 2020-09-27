@@ -2,6 +2,8 @@ from django.conf import settings
 from datetime import datetime
 from django.db import models
 
+from scrapper.models import Url
+
 
 
 class Annonce(models.Model):
@@ -9,7 +11,7 @@ class Annonce(models.Model):
         ('ESSENCE', 'ESSENCE'),
         ('DIESEL', 'DIESEL'),
     ]
-    URL = models.URLField(max_length=500)
+    URL = models.ForeignKey(Url, on_delete=models.CASCADE)
     MARQUE = models.CharField(max_length=20, blank=True)
     MODELE = models.CharField(max_length=20, blank=True)
     KM = models.FloatField(blank=True)

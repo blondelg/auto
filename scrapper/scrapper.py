@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from fake_useragent import UserAgent
 from django.conf import settings
 from bs4 import BeautifulSoup
+from .models import Url
 import itertools as it
 import requests
 import random
@@ -25,10 +26,12 @@ class GetHtmlSession:
         self.proxy_count = 0
         self.proxy_num = 0
         self.url = url
-        self.user_agent = UserAgent().random
+        self.user_agent = UserAgent()
         self.status_code = 0
         self.session_timeout = int(settings.CONFIG['SCRAPPER']['session_timeout'])
         self.max_proxy_try = int(settings.CONFIG['SCRAPPER']['max_proxy_try'])
+        self.min_sleep_time = int(settings.CONFIG['SCRAPPER']['min_sleep_time'])
+        self.max_sleep_time = int(settings.CONFIG['SCRAPPER']['max_sleep_time'])
         
         # Get proxies
         self.get_proxies()
@@ -50,17 +53,21 @@ class GetHtmlSession:
             session.proxies = {"http": f"http://{self.get_proxy_http()}", 
                                "https": f"https://{self.get_proxy_https()}"}
             headers = requests.utils.default_headers()
-            headers.update({'user_agent': self.user_agent},)
+            headers.update({'User-Agent': self.user_agent.random})
             session.headers = headers
             
             # Submit request
             try:
-                time.sleep(random.randrange(1,5))
-                self.response = requests.get(self.url, timeout=self.session_timeout)
+                time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
+                
+                self.response = session.get(self.url, timeout=self.session_timeout)
                 self.status_code = self.response.status_code
                 
             except requests.exceptions.RequestException as err:
                 settings.LOGGER.error(f"request error {err}")
+                settings.LOGGER.error(f"headers {session.headers}")
+                settings.LOGGER.error(f"proxies {session.proxies}")
+                settings.LOGGER.error(f"url {self.url}")
                 self.response = requests.Response()
             
             # Exit if too many fail
@@ -75,12 +82,12 @@ class GetHtmlSession:
         """ Get proxies list """
         
         try:
-            url_http = 'https://www.proxy-list.download/api/v1/get?type=httpe'
+            url_http = 'https://www.proxy-list.download/api/v1/get?type=http'
             response = requests.get(url_http, timeout=self.session_timeout)
             proxy_list = response.text.split("\r\n")
             self.proxy_pool_http = it.cycle(proxy_list)
 
-            url_https = 'https://www.proxy-list.download/api/v1/get?type=httpse'
+            url_https = 'https://www.proxy-list.download/api/v1/get?type=https'
             response = requests.get(url_https, timeout=self.session_timeout)
             proxy_list = response.text.split("\r\n")
             self.proxy_pool_https = it.cycle(proxy_list)
@@ -163,6 +170,8 @@ class AnnonceListScrapper:
         self.ad_url = []
         
         self.get_page_urls(search_url)
+        self.get_ad_urls()
+        self.save_ad_urls()
         
     
     def get_page_urls(self, url):
@@ -179,9 +188,11 @@ class AnnonceListScrapper:
     def get_ad_urls(self):
         """ return a list with urls for all ads """
         for url in self.page_url:
+
+            session = GetHtmlSession(url)
+            self.get_ad_url_list(session.get_html_text())
             
-        
-        
+            
     @soup
     def get_next_page_url(self, html, **kwargs):
         """ returns url of next page """
@@ -189,6 +200,25 @@ class AnnonceListScrapper:
             if "suivante" in e.decode_contents():
                 return self.domain.format(e.find("a")['href'])
         return None
+        
+
+    @soup
+    def get_ad_url_list(self, html, **kwargs):
+        """ update list of ad urls """
+        for e in kwargs['soup'].find_all("div", {"class": "adContainer"}):
+            sub_soup = BeautifulSoup(e.decode_contents(), "html.parser")
+            self.ad_url.append(sub_soup.find("a")['href'])
+            
+    
+    def save_ad_urls(self):
+        """  """
+        url_objects_list = []
+        for url in self.ad_url:
+            url_objects_list.append(Url(URL=self.domain.format(url), CIBLE='lacentrale'))
+        Url.objects.bulk_create(url_objects_list)
+
+        
+        
 
 
 
