@@ -8,7 +8,7 @@ The aim of this project is to provide an app that can scrappe data and, through 
 
 To build the image, run :
 ```bash
-docker build -t auto-server:1.0 .
+docker build --no-cache -t auto-server:1.0 .
 ```
 
 To launch the container, run :
@@ -29,3 +29,8 @@ To start jenkins service, run :
 docker exec -ti auto-server systemctl start jenkins
 ```
 Then go to http://127.0.0.1:8080
+
+To get Jenkins password, run :
+```bash
+docker exec -ti auto-server cat /var/lib/jenkins/secrets/initialAdminPassword
+```
