@@ -18,6 +18,7 @@ docker run -tid \
             --rm \
             --volume data:/home/ubuntu \
             --publish 8080:8080 \
+            --publish 8000:8000 \
             --publish 50000:50000 \
             --cap-add=NET_ADMIN \
             --cap-add=NET_RAW \

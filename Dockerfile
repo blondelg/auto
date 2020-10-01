@@ -1,6 +1,7 @@
 FROM ubuntu:latest
 MAINTAINER geoffroy
 EXPOSE 8080
+EXPOSE 8000
 EXPOSE 50000
 VOLUME /data
 WORKDIR /home/ubuntu
