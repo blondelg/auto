@@ -3,6 +3,7 @@ MAINTAINER geoffroy
 EXPOSE 8080
 EXPOSE 50000
 VOLUME /data
+WORKDIR /home/ubuntu
 RUN apt-get update
 RUN apt-get install -y vim
 RUN apt-get install -y wget
@@ -18,12 +19,4 @@ RUN apt-get install -y systemctl
 RUN apt-get install -y curl
 RUN apt-get install -y git
 RUN systemctl enable jenkins
-WORKDIR /home/ubuntu
-RUN git clone https://github.com/blondelg/auto.git
-RUN curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-RUN python3.8 get-pip.py
-RUN pip install virtualenv
-RUN virtualenv venv
-RUN /home/ubuntu/venv/bin/pip install -r auto/requirements.txt
-
-RUN cat /var/lib/jenkins/secrets/initialAdminPassword
+CMD ["bash", "-c", "systemctl start jenkins"]
