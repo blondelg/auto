@@ -4,7 +4,7 @@ EXPOSE 8080
 EXPOSE 8000
 EXPOSE 50000
 VOLUME /data
-WORKDIR /home/ubuntu
+WORKDIR /var/lib/jenkins/workspace
 RUN apt-get update
 RUN apt-get install -y vim
 RUN apt-get install -y wget
@@ -19,5 +19,5 @@ RUN apt-get install -y jenkins
 RUN apt-get install -y systemctl
 RUN apt-get install -y curl
 RUN apt-get install -y git
-RUN systemctl enable jenkins
 CMD ["bash", "-c", "systemctl start jenkins"]
+

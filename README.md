@@ -25,13 +25,9 @@ docker run -tid \
             auto-server:1.0
 ```
 
-To start jenkins service, run :
-```bash
-docker exec -ti auto-server systemctl start jenkins
-```
 Then go to http://127.0.0.1:8080
 
 To get Jenkins password, run :
 ```bash
-docker exec -ti auto-server cat /var/lib/jenkins/secrets/initialAdminPassword
+docker exec auto-server cat /var/lib/jenkins/secrets/initialAdminPassword
 ```
