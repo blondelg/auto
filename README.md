@@ -14,15 +14,12 @@ docker build --no-cache -t auto-server:1.0 .
 To launch the container, run :
 ```bash
 docker run -tid \
-            --name auto-server \
+            --name runserver \
+	    --hostname runserver
             --rm \
-            --volume data:/home/ubuntu \
-            --publish 8080:8080 \
+            --volume data \
             --publish 8000:8000 \
-            --publish 50000:50000 \
-            --cap-add=NET_ADMIN \
-            --cap-add=NET_RAW \
-            auto-server:1.0
+            runserver:1.0
 ```
 
 Then go to http://127.0.0.1:8080

@@ -1,23 +1,32 @@
-FROM ubuntu:latest
+# Staring image
+FROM python:latest
 MAINTAINER geoffroy
-EXPOSE 8080
-EXPOSE 8000
-EXPOSE 50000
-VOLUME /data
-WORKDIR /var/lib/jenkins/workspace
-RUN apt-get update
-RUN apt-get install -y vim
-RUN apt-get install -y wget
-RUN apt-get install -y gnupg
-RUN apt-get install -y openjdk-8-jdk
-RUN apt-get install -y python3.8
-RUN apt-get install -y python3-distutils
-RUN wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | apt-key add -
-RUN sh -c 'echo deb https://pkg.jenkins.io/debian-stable binary/ > /etc/apt/sources.list.d/jenkins.list'
-RUN apt-get update
-RUN apt-get install -y jenkins
-RUN apt-get install -y systemctl
-RUN apt-get install -y curl
-RUN apt-get install -y git
-CMD ["bash", "-c", "systemctl start jenkins"]
 
+# Ports exposure
+EXPOSE 8000
+VOLUME /data
+
+# Install dependancies
+RUN apt-get update && apt-get install -y \
+	vim \
+	git \
+	&& rm -rf /var/lib/apt/lists/*
+
+# Setup python dependancies
+RUN git clone https://github.com/blondelg/auto.git
+WORKDIR /auto
+RUN cd /auto
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Setup environment configuration
+RUN cp auto/config_sample.ini auto/config.ini
+RUN sed -i "s/SECRET_KEY_PATTERN/$(python generate_key.py)/gI" auto/config.ini
+RUN sed -i "s/django.db.backends.sqlite3/django.db.backends.mysql/gI" auto/config.ini
+RUN sed -i 's|{BASE_DIR}/db.sqlite3|autodb|gI' auto/config.ini
+RUN sed -i "s/USER_PATTERN/root/gI" auto/config.ini
+RUN sed -i "s/PASSWORD_PATTERN/root/gI" auto/config.ini
+RUN sed -i "s/HOST_PATTERN/database/gI" auto/config.ini
+RUN sed -i "s/PORT_PATTERN/3306/gI" auto/config.ini
+
+# Start service when runs
+CMD ["python", "./manage.py", "runserver", "0.0.0.0:8000"]
