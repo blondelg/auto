@@ -15,7 +15,7 @@ To launch the container, run :
 ```bash
 docker run -tid \
             --name runserver \
-	    --hostname runserver
+	    --hostname runserver \
             --rm \
             --volume data \
             --publish 8000:8000 \

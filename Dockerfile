@@ -29,4 +29,5 @@ RUN sed -i "s/HOST_PATTERN/database/gI" auto/config.ini
 RUN sed -i "s/PORT_PATTERN/3306/gI" auto/config.ini
 
 # Start service when runs
-CMD ["python", "./manage.py", "runserver", "0.0.0.0:8000"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
