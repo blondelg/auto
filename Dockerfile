@@ -1,5 +1,5 @@
 # Staring image
-FROM python:latest
+FROM python:3.8
 MAINTAINER geoffroy
 
 # Ports exposure
@@ -29,5 +29,4 @@ RUN sed -i "s/HOST_PATTERN/database/gI" auto/config.ini
 RUN sed -i "s/PORT_PATTERN/3306/gI" auto/config.ini
 
 # Start service when runs
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
-
+CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
