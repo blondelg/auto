@@ -28,7 +28,7 @@ To connect to the database without client (password: _root_):
 ```bash
 docker exec -ti database mysql -u root -h localhost -p autodb
 ```
-Then go to http://127.0.0.1:8080
+Then go to http://127.0.0.1:8000
 
 ### Re-build web-server
 If a new commit has been done, here is a command that re-build the web-server without destroying the database
