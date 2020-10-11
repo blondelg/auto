@@ -4,27 +4,12 @@ The aim of this project is to provide an app that can scrappe data and, through 
 
 ## Developpment  environnement
 
-**dockerfile** provides a simple container setup to deploy the project on developpment mode.
+**Dockerfile** provides a simple container setup to deploy the project on developpment mode.
+**docker-compose.yml** stores containers' orchestration for database and web server.
 
-To build the image, run :
+To deploy the developpment environnement:
 ```bash
-docker build --no-cache -t runserver:1.0 .
-```
-
-To launch the container, run :
-```bash
-docker run -tid \
-            --name runserver \
-	    --hostname runserver \
-            --rm \
-            --volume data \
-            --publish 8000:8000 \
-            runserver:1.0
+docker-compose up --build -d
 ```
 
 Then go to http://127.0.0.1:8080
-
-To get Jenkins password, run :
-```bash
-docker exec auto-server cat /var/lib/jenkins/secrets/initialAdminPassword
-```
