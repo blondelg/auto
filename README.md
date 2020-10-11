@@ -5,6 +5,7 @@ The aim of this project is to provide an app that can scrappe data and, through 
 ## Developpment  environnement
 
 **Dockerfile** provides a simple container setup to deploy the project on developpment mode.
+
 **docker-compose.yml** stores containers' orchestration for database and web server.
 
 ### Deployement
