@@ -8,7 +8,7 @@ The aim of this project is to provide an app that can scrappe data and, through 
 
 To build the image, run :
 ```bash
-docker build --no-cache -t auto-server:1.0 .
+docker build --no-cache -t runserver:1.0 .
 ```
 
 To launch the container, run :
