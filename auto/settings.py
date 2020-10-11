@@ -34,8 +34,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     
-    'annonce',
-    'scrapper',
+    'apps.annonce',
+    'apps.scrapper',
 ]
 
 if DEBUG:
