@@ -18,6 +18,10 @@ WORKDIR /auto
 RUN cd /auto
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Build the secret key generator
+RUN echo "import random" > generate_key.py
+RUN echo "print(''.join(random.SystemRandom().choice('abcdefghijklmnopqrstuvwxyz0123456789!@$^&*(-_=+)') for i in range(50)))" >> generate_key.py
+
 # Setup environment configuration
 RUN cp auto/config_sample.ini auto/config.ini
 RUN sed -i "s/SECRET_KEY_PATTERN/$(python generate_key.py)/gI" auto/config.ini
