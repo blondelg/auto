@@ -2,6 +2,10 @@
 FROM python:3.8
 MAINTAINER geoffroy
 
+# Set environment variables
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
 # Ports exposure
 EXPOSE 8000
 VOLUME /data
@@ -33,4 +37,4 @@ RUN sed -i "s/HOST_PATTERN/database/gI" auto/config.ini
 RUN sed -i "s/PORT_PATTERN/3306/gI" auto/config.ini
 
 # Start service when runs
-CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
+# CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
