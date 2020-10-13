@@ -8,3 +8,7 @@ class GeneralTestCase(TestCase):
 
         self.assertEqual(requests.get("https://google.fr").status_code, 200)
 
+
+    def test_database(self):
+
+        pass
