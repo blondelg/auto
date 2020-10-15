@@ -29,4 +29,5 @@ class Url(models.Model):
         else:
             settings.LOGGER.warning(f"url deja en base {self.URL}")
     
-
+    def get_last_entry_date(self):
+       return Url.objects.only("DATE").aggregate(models.Max('DATE'))['DATE__max']

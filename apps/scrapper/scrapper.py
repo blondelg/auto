@@ -168,7 +168,6 @@ class AnnonceListScrapper:
         self.search_url = search_url
         self.page_url = []
         self.ad_url = []
-        
         self.get_page_urls(search_url)
         self.get_ad_urls()
         self.save_ad_urls()
@@ -219,16 +218,6 @@ class AnnonceListScrapper:
 
         
         
-
-
-
-
-
-
-
-
-
-
 
 
 
