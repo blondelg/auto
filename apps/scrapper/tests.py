@@ -24,45 +24,44 @@ Publié depuis : <strong>60 jours</strong>
 <li class="arrow-btn "><a href="/occasion-voiture-marque-citroen-2.html" title="Page suivante"><i class="cbm-picto--arrowR"></i></a></li>
 """
 
+    params = {}
+    params['session_timeout'] = 1
+    params['max_proxy_try'] = 2
+    params['min_sleep_time'] = 0
+    params['max_sleep_time'] = 1
+
     def test_retuns_text_real_url(self):
-    
-        self.session = GetHtmlSession(self.real_url)
+        self.session = GetHtmlSession(self.real_url, **self.params)
         self.assertEqual(isinstance(self.session.get_html_text(), str), True)
         
         
     def test_retuns_text_fake_url(self):
-    
-        self.session = GetHtmlSession(self.fake_url)
+        self.session = GetHtmlSession(self.fake_url, **self.params)
         self.assertEqual(isinstance(self.session.get_html_text(), str), True)
         
         
     def test_returns_dict(self):
-    
         self.data_parser = DataParser()
         self.assertEqual(isinstance(self.data_parser.scrap_lacentrale('raw html'), dict), True)
         
         
     def test_returns_empty_dict_if_missing_data(self):
-    
         self.data_parser = DataParser()
         self.assertEqual(len(self.data_parser.scrap_lacentrale(self.html_missing)), 0)
         
         
     def test_returns_full_dict_if_data_are_ok(self):
-    
         self.data_parser = DataParser()
         self.assertNotEqual(len(self.data_parser.scrap_lacentrale(self.html_full)), 0)
         
         
     def test_get_next_page_url(self):
-    
-        self.annonce_list = AnnonceListScrapper(self.real_url)
+        self.annonce_list = AnnonceListScrapper(self.real_url, **self.params)
         self.assertEqual(isinstance(self.annonce_list.get_next_page_url(self.html_full), str), True)
         
         
     def test_get_next_page_url_last_page(self):
-    
-        self.annonce_list = AnnonceListScrapper(self.real_url)
+        self.annonce_list = AnnonceListScrapper(self.real_url, **self.params)
         self.assertEqual(self.annonce_list.get_next_page_url(self.html_missing), None)
         
 

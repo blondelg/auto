@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from apps.annonce.models import Annonce 
 from fake_useragent import UserAgent
 from django.conf import settings
 from bs4 import BeautifulSoup
@@ -22,17 +23,23 @@ def soup(func):
 class GetHtmlSession:
     """ Build session and retrieve html source """
     
-    def __init__(self, url):
+    def __init__(self, url, **kwargs):
         self.proxy_count = 0
         self.proxy_num = 0
         self.url = url
         self.user_agent = UserAgent()
         self.status_code = 0
-        self.session_timeout = int(settings.CONFIG['SCRAPPER']['session_timeout'])
-        self.max_proxy_try = int(settings.CONFIG['SCRAPPER']['max_proxy_try'])
-        self.min_sleep_time = int(settings.CONFIG['SCRAPPER']['min_sleep_time'])
-        self.max_sleep_time = int(settings.CONFIG['SCRAPPER']['max_sleep_time'])
-        
+
+        # Change default settings if needed
+        self.session_timeout = kwargs.get('session_timeout',
+                int(settings.CONFIG['SCRAPPER']['session_timeout']))
+        self.max_proxy_try = kwargs.get('max_proxy_try',
+                int(settings.CONFIG['SCRAPPER']['max_proxy_try']))
+        self.min_sleep_time = kwargs.get('min_sleep_time',
+                int(settings.CONFIG['SCRAPPER']['min_sleep_time']))
+        self.max_sleep_time = kwargs.get('max_sleep_time',
+                int(settings.CONFIG['SCRAPPER']['max_sleep_time']))
+
         # Get proxies
         self.get_proxies()
         
@@ -163,9 +170,9 @@ class AnnonceListScrapper:
     
     domain = "https://www.lacentrale.fr{}"
     
-    
-    def __init__(self, search_url):
+    def __init__(self, search_url, **kwargs):
         self.search_url = search_url
+        self.kwargs = kwargs
         self.page_url = []
         self.ad_url = []
         self.get_page_urls(search_url)
@@ -179,7 +186,7 @@ class AnnonceListScrapper:
         
         while url:
             self.page_url.append(url)
-            session = GetHtmlSession(url)
+            session = GetHtmlSession(url, **self.kwargs)
             url = self.get_next_page_url(session.get_html_text())
 
 
@@ -187,8 +194,7 @@ class AnnonceListScrapper:
     def get_ad_urls(self):
         """ return a list with urls for all ads """
         for url in self.page_url:
-
-            session = GetHtmlSession(url)
+            session = GetHtmlSession(url, **self.kwargs)
             self.get_ad_url_list(session.get_html_text())
             
             
@@ -210,14 +216,30 @@ class AnnonceListScrapper:
             
     
     def save_ad_urls(self):
-        """  """
+        """ from a list of urls record them in database """
         url_objects_list = []
         for url in self.ad_url:
             url_objects_list.append(Url(URL=self.domain.format(url), CIBLE='lacentrale'))
         Url.objects.bulk_create(url_objects_list)
 
-        
-        
+
+class AnnonceScrapper:
+    """ reads Url table and load corresponding annonces into Annonce table """
+
+    def __init__(self):
+        self.annonces = []        
+
+    def get_pending_urls(self):
+        """ from db, returns a list of pending """
+        pass
+
+
+
+
+
+
+
+
 
 
 
