@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     
     'apps.annonce',
     'apps.scrapper',
+    'apps.logs',
 ]
 
 if DEBUG:
