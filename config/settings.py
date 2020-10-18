@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     
     'apps.annonce',
     'apps.scrapper',
-    'apps.logs',
 ]
 
 if DEBUG:
@@ -135,10 +134,12 @@ STATIC_URL = '/static/'
 
 log_path = os.path.join(BASE_DIR, '.log')
 
+# Create log directory if not exists
 if not os.path.isdir(log_path):
     os.mkdir(log_path)
     
-log_name = "log_{}.txt".format(datetime.now().strftime("%Y%m%d"))
+#  log_name = "log_{}.txt".format(datetime.now().strftime("%Y%m%d"))
+log_name = "log.txt"
 
 LOGGING = {
     'version': 1,
@@ -166,10 +167,13 @@ LOGGING = {
         },
 
         'log_file':{
-            'level': 'DEBUG',
-            'class': 'logging.handlers.RotatingFileHandler',
+            'level': 'INFO',
+            'class': 'logging.handlers.TimedRotatingFileHandler',
+            'when': 'D',
+            'interval': 1,
+            'backupCount': 3,
+            'encoding': 'utf8',
             'filename': os.path.join(log_path, log_name),
-            'maxBytes': 16777216,
             'formatter': 'verbose',
         },
         'mail_admins': {
