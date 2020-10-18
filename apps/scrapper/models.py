@@ -17,10 +17,10 @@ class Url(models.Model):
 
     
     def __repr__(self):
-        return f'<Url: Status={self.URL}>'
+        return f'<Url: {self.URL} | {self.STATUS}>'
 
     def __str__(self):
-        return f'<Url: Status={self.URL}>'
+        return f'<Url: {self.URL} | {self.STATUS}>'
         
     def save(self, *args, **kwargs):
         """ prevent saving twice the same url """

@@ -171,7 +171,7 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 1,
-            'backupCount': 3,
+            'backupCount': CONFIG['GENERAL']['LOG_BACKUP_DAYS'],
             'encoding': 'utf8',
             'filename': os.path.join(log_path, log_name),
             'formatter': 'verbose',

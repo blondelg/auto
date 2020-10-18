@@ -29,6 +29,7 @@ class GetHtmlSession:
         self.url = url
         self.user_agent = UserAgent()
         self.status_code = 0
+        self.err = ''
 
         # Change default settings if needed
         self.session_timeout = kwargs.get('session_timeout',
@@ -71,15 +72,23 @@ class GetHtmlSession:
                 self.status_code = self.response.status_code
                 
             except requests.exceptions.RequestException as err:
+                settings.LOGGER.warning(f"request error {err}")
+                settings.LOGGER.warning(f"headers {session.headers}")
+                settings.LOGGER.warning(f"proxies {session.proxies}")
+                settings.LOGGER.warning(f"url {self.url}")
+                self.response = requests.Response()
+                self.err = err
+            
+            # Exit if too many fail
+            if self.response.status_code != 200:
+                settings.LOGGER.info(f"Exit code 200 after {try_count} tries")
+
+            elif self.response.status_code != 200 and try_count == self.max_proxy_try:
+                settings.LOGGER.error(f"get request exceded {try_count} tries")
                 settings.LOGGER.error(f"request error {err}")
                 settings.LOGGER.error(f"headers {session.headers}")
                 settings.LOGGER.error(f"proxies {session.proxies}")
                 settings.LOGGER.error(f"url {self.url}")
-                self.response = requests.Response()
-            
-            # Exit if too many fail
-            if self.response.status_code != 200 and try_count == self.max_proxy_try:
-                settings.LOGGER.warning(f"get request exceded {try_count} tries")
                 break
                 
             try_count += 1
@@ -145,11 +154,12 @@ class DataParser:
     def scrap_lacentrale(self, html, **kwargs):
     
         try:
-            json_data = json.loads(kwargs['soup'].find("div", {"id": "trackingStateContainer"}).getText())
+            #  print("KWARGS :", type(kwargs['soup']))
+            json_data = json.loads(kwargs['soup'].find("label", {"id": "trackingStateContainer"}).getText())
             age = kwargs['soup'].find("div", {"class": "cbm-toolboxButtons"}).span.strong.getText().strip().split(" ")[0]
             DATE = datetime.now() - timedelta(days=int(age))
-            output = {'URL': json_data['classified']['url'],
-                    'PRIX': json_data['vehicle']['price']['price'],
+            #  output = {'URL': json_data['classified']['url'],
+            output = {'PRIX': json_data['vehicle']['price']['price'],
                     'MARQUE': json_data['vehicle']['make'],
                     'MODELE': json_data['vehicle']['model'],
                     'ENERGIE': json_data['vehicle']['energy'],
@@ -224,16 +234,29 @@ class AnnonceListScrapper:
 
 
 class AnnonceScrapper:
-    """ reads Url table and load corresponding annonces into Annonce table """
+    """ from a given ad url, scrape data into annonce table  """
+    def __init__(self, url):
+        self.url = url      
+        self.get_data_from_url()
+        self.save_annonce()
 
-    def __init__(self):
-        self.annonces = []        
+    def get_data_from_url(self):
+        """ scrape data from url """
+        session = GetHtmlSession(self.url.URL)
+        html = session.get_html_text()
+        parser = DataParser()
+        self.data_dict = parser.scrap_lacentrale(html)
 
-    def get_pending_urls(self):
-        """ from db, returns a list of pending """
-        pass
-
-
+    def save_annonce(self):
+        """ save data from dict into annonce table """
+        try:
+            annonce = Annonce(**self.data_dict)
+            annonce.URL = self.url
+            annonce.save()
+            Url.objects.filter(pk=self.url.pk).update(STATUS = 'VALIDE')
+        except Exception as err:
+            settings.LOGGER.error(f"{err}")
+            Url.objects.filter(pk=self.url.pk).update(STATUS = 'ERREUR')
 
 
 

@@ -1,33 +1,22 @@
 from django.core.management.base import BaseCommand, CommandError
 from apps.scrapper.scrapper import AnnonceListScrapper
-#  Draft command line
-#  Telecharger les données pour toute les annonces
-#  > load-data --all
-#  > load-data --url  --all
-#  > load-data --url  --last
+from apps.scrapper.scrapper import AnnonceScrapper
+from apps.scrapper.models import Url
 
 
 class Command(BaseCommand):
     help='From a search URL, load all add urls'
 
     def add_arguments(self, parser):
-        parser.add_argument('url', nargs='+', type=str)
         parser.add_argument(
            '--all', 
            action='store_true', 
-           help='charge toute les données',
+           help='load all ad urls with ATTENTE status',
         )        
-        parser.add_argument(
-           '--last', 
-           action='store_true', 
-           help='charge toute les données',
-        )
-
 
     def handle(self, *args, **options):
         if options['all']:
-            print(options['url'][0])
-            AnnonceListScrapper(options['url'][0])
-        if options['last']:
-            print('last')
-        
+            # Get all ATTENTE Urls
+            urls_attente = Url.objects.filter(STATUS = 'ATTENTE')
+            for url in urls_attente:
+                AnnonceScrapper(url)
