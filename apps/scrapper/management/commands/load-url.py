@@ -1,5 +1,6 @@
 from django.core.management.base import BaseCommand, CommandError
 from apps.scrapper.scrapper import AnnonceListScrapper
+from apps.scrapper.models import Url
 
 
 class Command(BaseCommand):
@@ -16,4 +17,5 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         if options['all']:
-            AnnonceListScrapper(options['url'][0])
+            url = Url(URL = options['url'][0])
+            AnnonceListScrapper(url.URL)

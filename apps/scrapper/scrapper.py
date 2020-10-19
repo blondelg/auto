@@ -54,6 +54,7 @@ class GetHtmlSession:
         Use proxies and User agent
         """
         try_count = 1
+        start = time.time()
         while self.status_code != 200:
             
             # Setup proxy and header for get request
@@ -72,20 +73,18 @@ class GetHtmlSession:
                 self.status_code = self.response.status_code
                 
             except requests.exceptions.RequestException as err:
-                settings.LOGGER.warning(f"request error {err}")
-                settings.LOGGER.warning(f"headers {session.headers}")
-                settings.LOGGER.warning(f"proxies {session.proxies}")
-                settings.LOGGER.warning(f"url {self.url}")
                 self.response = requests.Response()
                 self.err = err
             
             # Exit if too many fail
-            if self.response.status_code != 200:
+            if self.response.status_code == 200:
+                end = time.time()
                 settings.LOGGER.info(f"Exit code 200 after {try_count} tries")
+                settings.LOGGER.info(f"Response in {end - start} seconds")
 
             elif self.response.status_code != 200 and try_count == self.max_proxy_try:
                 settings.LOGGER.error(f"get request exceded {try_count} tries")
-                settings.LOGGER.error(f"request error {err}")
+                settings.LOGGER.error(f"request error {self.err}")
                 settings.LOGGER.error(f"headers {session.headers}")
                 settings.LOGGER.error(f"proxies {session.proxies}")
                 settings.LOGGER.error(f"url {self.url}")
