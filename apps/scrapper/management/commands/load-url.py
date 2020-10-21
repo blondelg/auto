@@ -14,8 +14,20 @@ class Command(BaseCommand):
            action='store_true', 
            help='load all ad urls from a give search url',
         )        
+        parser.add_argument(
+           '--one', 
+           '-o',
+           action='store_true', 
+           help='load one url inputed',
+        )        
+
 
     def handle(self, *args, **options):
         if options['all']:
             url = Url(URL = options['url'][0])
             AnnonceListScrapper(url.URL)
+
+        if options['one']:
+            url = Url(URL = options['url'][0])
+            # get target from URL
+            # save url

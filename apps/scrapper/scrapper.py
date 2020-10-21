@@ -228,7 +228,7 @@ class AnnonceListScrapper:
         """ from a list of urls record them in database """
         url_objects_list = []
         for url in self.ad_url:
-            url_objects_list.append(Url(URL=self.domain.format(url), CIBLE='lacentrale'))
+            url_objects_list.append(Url(URL=self.domain.format(url)))
         Url.objects.bulk_create(url_objects_list)
 
 
