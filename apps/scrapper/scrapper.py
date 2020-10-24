@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 from apps.annonce.models import Annonce 
 from fake_useragent import UserAgent
+from urllib.parse import urlparse
 from django.conf import settings
 from bs4 import BeautifulSoup
 from .models import Url
@@ -9,6 +10,7 @@ import requests
 import random
 import time
 import json
+import os
 
 
 
@@ -26,10 +28,10 @@ class GetHtmlSession:
     def __init__(self, url, **kwargs):
         self.proxy_count = 0
         self.proxy_num = 0
-        self.url = url
         self.user_agent = UserAgent()
         self.status_code = 0
         self.err = ''
+        self.url = urlparse(url)
 
         # Change default settings if needed
         self.session_timeout = kwargs.get('session_timeout',
@@ -69,7 +71,7 @@ class GetHtmlSession:
             try:
                 time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
                 
-                self.response = session.get(self.url, timeout=self.session_timeout)
+                self.response = session.get(self.url.geturl(), timeout=self.session_timeout)
                 self.status_code = self.response.status_code
                 
             except requests.exceptions.RequestException as err:
@@ -87,7 +89,7 @@ class GetHtmlSession:
                 settings.LOGGER.error(f"request error {self.err}")
                 settings.LOGGER.error(f"headers {session.headers}")
                 settings.LOGGER.error(f"proxies {session.proxies}")
-                settings.LOGGER.error(f"url {self.url}")
+                settings.LOGGER.error(f"url {self.url.geturl()}")
                 break
                 
             try_count += 1
@@ -175,61 +177,94 @@ class DataParser:
 
 
 class AnnonceListScrapper:
-    """ From a search url """
+    """ from a annonce searche url, get all page in pagination,  """
+
     
-    domain = "https://www.lacentrale.fr{}"
-    
-    def __init__(self, search_url, **kwargs):
-        self.search_url = search_url
+    def __init__(self, index_url, **kwargs):
+        self.index_url = urlparse(index_url)
+        self.base_url = self.get_base_url()
+        self.url_list = []
         self.kwargs = kwargs
-        self.page_url = []
-        self.ad_url = []
-        self.get_page_urls(search_url)
-        self.get_ad_urls()
-        self.save_ad_urls()
+        self.has_next = True
+        self.save_count = 0
         
-    
-    def get_page_urls(self, url):
-        """ from a given search URL, retrieve all pagination urls """
-        url = self.search_url
+        self.get_urls()
         
-        while url:
-            self.page_url.append(url)
-            session = GetHtmlSession(url, **self.kwargs)
-            url = self.get_next_page_url(session.get_html_text())
 
 
-          
-    def get_ad_urls(self):
-        """ return a list with urls for all ads """
-        for url in self.page_url:
-            session = GetHtmlSession(url, **self.kwargs)
-            self.get_ad_url_list(session.get_html_text())
-            
-            
-    @soup
-    def get_next_page_url(self, html, **kwargs):
-        """ returns url of next page """
-        for e in kwargs['soup'].find_all("li", {"class": "arrow-btn"}):
-            if "suivante" in e.decode_contents():
-                return self.domain.format(e.find("a")['href'])
-        return None
+    def get_urls(self):
+        """ main function """
         
+        while self.has_next:
+        
+            # get page html
+            session = GetHtmlSession(self.index_url.geturl())
+            index_html = session.get_html_text()
+            
+            # get page urls
+            url_list = self.get_annonces_url(index_html)
+            
+            # record page urls
+            self.record_annonce_url(url_list)
+            
+            # set new index url
+            next_page_path = self.get_next_page_url(index_html)
+            if next_page_path:
+                self.index_url = self.base_url._replace(path=next_page_path)
+                
+            else:
+                self.has_next = False
+                
 
     @soup
-    def get_ad_url_list(self, html, **kwargs):
-        """ update list of ad urls """
+    def get_annonces_url(self, html, **kwargs):
+        """ from a given html page, get all add url paths """
+        
+        url_list = []
         for e in kwargs['soup'].find_all("div", {"class": "adContainer"}):
             sub_soup = BeautifulSoup(e.decode_contents(), "html.parser")
-            self.ad_url.append(sub_soup.find("a")['href'])
+
+            temp_ad_url = self.base_url._replace(path=sub_soup.find("a")['href'])
+            url_list.append(temp_ad_url)
+            
+        return url_list
             
     
-    def save_ad_urls(self):
-        """ from a list of urls record them in database """
-        url_objects_list = []
-        for url in self.ad_url:
-            url_objects_list.append(Url(URL=self.domain.format(url)))
-        Url.objects.bulk_create(url_objects_list)
+    def record_annonce_url(self, url_list):
+        """ from a given url, record it in DB """
+        
+        # Loop over ad url list and save them
+        # Not using Django's bulk_create() as the process is very slow due to scrapping bot
+        for url in url_list:
+            temp_url = Url(URL=url.geturl())
+            try:
+                temp_url.save()
+                self.save_count += 1
+            except Exception as err:
+                settings.LOGGER.error(f"save annonce url error {err}")
+                
+    
+    @soup
+    def get_next_page_url(self, html, **kwargs):
+        """ from a given html page, returns next page url if there is a next page
+        otherwise retunrs None """
+        
+        try:
+            return kwargs['soup'].find("a", {"title": "Page suivante"})['href']
+        except:
+            return None
+
+
+    def get_base_url(self):
+        """ returns the base url of index """
+        
+        base_url = self.index_url._replace(path='')
+        base_url = base_url._replace(query='')
+        return base_url._replace(fragment='')   
+    
+    def success_log_record(self):
+        settings.LOGGER.info(f"Annonce list scrapper: {try_count} annonces saved")
+  
 
 
 class AnnonceScrapper:
@@ -253,6 +288,7 @@ class AnnonceScrapper:
             annonce.URL = self.url
             annonce.save()
             Url.objects.filter(pk=self.url.pk).update(STATUS = 'VALIDE')
+            
         except Exception as err:
             settings.LOGGER.error(f"{err}")
             Url.objects.filter(pk=self.url.pk).update(STATUS = 'ERREUR')

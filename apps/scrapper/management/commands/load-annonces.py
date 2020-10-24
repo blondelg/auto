@@ -5,20 +5,21 @@ from apps.scrapper.models import Url
 
 
 class Command(BaseCommand):
-    help='From a search URL, load all add urls, from a single annonce url, load datas'
+    help='scrappe all ATTENTE urls in Url table, scrappe one given url'
 
     def add_arguments(self, parser):
         parser.add_argument(
            '--all', 
+           '-a',
            action='store_true', 
            help='load all ad urls with ATTENTE status',
         )        
 
         parser.add_argument(
-           '--target', 
-           '-t',
+           '--one', 
+           '-o',
            type=str,
-           help='target source defined in config file',
+           help='load data from the given url',
         )        
 
     def handle(self, *args, **options):
@@ -29,9 +30,14 @@ class Command(BaseCommand):
                 AnnonceScrapper(url)
 
         else:
-            print('DEBUG : ', options['target'])
+            print('DEBUG : ', options['one'])
             # define Url object
-            #  url = Url(
+            url = Url(URL=options['one'])
+            url.CIBLE = url.get_target_from_url()
             # try to scrappe it
-
+            try:
+                url.save()
+                scrapper = AnnonceScrapper(url)
+            except:
+                pass
             # record Url object thanks to the result

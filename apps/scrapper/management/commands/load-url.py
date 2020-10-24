@@ -30,4 +30,6 @@ class Command(BaseCommand):
         if options['one']:
             url = Url(URL = options['url'][0])
             # get target from URL
+            url.CIBLE = url.get_target_from_url()
             # save url
+            url.save()
