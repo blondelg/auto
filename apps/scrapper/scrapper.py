@@ -269,29 +269,33 @@ class AnnonceListScrapper:
 
 class AnnonceScrapper:
     """ from a given ad url, scrape data into annonce table  """
+    
     def __init__(self, url):
-        self.url = url      
+        self.url_object = url
+        self.url_parsed = urlparse(url.URL)     
         self.get_data_from_url()
         self.save_annonce()
 
     def get_data_from_url(self):
         """ scrape data from url """
-        session = GetHtmlSession(self.url.URL)
+        
+        session = GetHtmlSession(self.url_parsed.geturl())
         html = session.get_html_text()
         parser = DataParser()
         self.data_dict = parser.scrap_lacentrale(html)
 
     def save_annonce(self):
         """ save data from dict into annonce table """
+        
         try:
             annonce = Annonce(**self.data_dict)
-            annonce.URL = self.url
+            annonce.URL = self.url_object
             annonce.save()
-            Url.objects.filter(pk=self.url.pk).update(STATUS = 'VALIDE')
+            Url.objects.filter(pk=self.url_object.pk).update(STATUS = 'VALIDE')
             
         except Exception as err:
-            settings.LOGGER.error(f"{err}")
-            Url.objects.filter(pk=self.url.pk).update(STATUS = 'ERREUR')
+            settings.LOGGER.error(f"save annonce error : {err} for {self.url_parsed.geturl()}")
+            Url.objects.filter(pk=self.url_object.pk).update(STATUS = 'ERREUR')
 
 
 

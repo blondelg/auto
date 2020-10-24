@@ -39,7 +39,6 @@ class Url(models.Model):
     def get_target_from_url(self):
         """ from a given url, retunrs a Cible object """
         domaine = urlparse(self.URL).netloc
-        print('DEBUG : ', self.URL)
         return Cible.objects.get(DOMAINE = domaine)
         
     class Meta:

@@ -21,6 +21,7 @@ class Annonce(models.Model):
     ANNEE = models.IntegerField(blank=True)
     DATE = models.DateField()
     CODEPOSTAL = models.IntegerField(blank=True)
+    DATECRT = models.DateField(auto_now_add=True)
     
     def __repr__(self):
         return f'<Annonce: URL={self.URL}>'

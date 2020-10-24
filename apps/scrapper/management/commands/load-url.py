@@ -4,16 +4,10 @@ from apps.scrapper.models import Url
 
 
 class Command(BaseCommand):
-    help='from a search URL, load all add urls'
+    help='from a seach url, load all ad urls. if --one argiment is passed, load only the inputed url'
 
     def add_arguments(self, parser):
         parser.add_argument('url', nargs='+', type=str)
-        parser.add_argument(
-           '--all', 
-           '-a',
-           action='store_true', 
-           help='load all ad urls from a give search url',
-        )        
         parser.add_argument(
            '--one', 
            '-o',
@@ -23,13 +17,18 @@ class Command(BaseCommand):
 
 
     def handle(self, *args, **options):
-        if options['all']:
-            url = Url(URL = options['url'][0])
-            AnnonceListScrapper(url.URL)
 
         if options['one']:
             url = Url(URL = options['url'][0])
             # get target from URL
             url.CIBLE = url.get_target_from_url()
             # save url
-            url.save()
+            try:
+                url.save()
+            except:
+                print('ad already recorded')
+
+        else:
+            url = Url(URL = options['url'][0])
+            AnnonceListScrapper(url.URL)
+
