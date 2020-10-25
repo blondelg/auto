@@ -12,14 +12,9 @@ import time
 import json
 import os
 
+from .target import toolbox_chooser
 
 
-# Decorator that makes soup from html
-def soup(func):
-    def get_soup(*args, **kwargs):
-        kwargs['soup'] = BeautifulSoup(args[1], "html.parser")
-        return func(*args, **kwargs)
-    return get_soup
 
 
 class GetHtmlSession:
@@ -145,37 +140,6 @@ class GetHtmlSession:
             return ''
             
 
-class DataParser:
-    """ provides a set of methods to scrap data from an annonce """
-    
-    def __init__(self):
-        pass
-        
-    @soup
-    def scrap_lacentrale(self, html, **kwargs):
-    
-        try:
-            #  print("KWARGS :", type(kwargs['soup']))
-            json_data = json.loads(kwargs['soup'].find("label", {"id": "trackingStateContainer"}).getText())
-            age = kwargs['soup'].find("div", {"class": "cbm-toolboxButtons"}).span.strong.getText().strip().split(" ")[0]
-            DATE = datetime.now() - timedelta(days=int(age))
-            #  output = {'URL': json_data['classified']['url'],
-            output = {'PRIX': json_data['vehicle']['price']['price'],
-                    'MARQUE': json_data['vehicle']['make'],
-                    'MODELE': json_data['vehicle']['model'],
-                    'ENERGIE': json_data['vehicle']['energy'],
-                    'ANNEE': json_data['vehicle']['year'],
-                    'CODEPOSTAL': json_data['vehicle']['zipcode'],
-                    'DIN': json_data['vehicle']['powerDIN'],
-                    'KM': json_data['vehicle']['mileage'],
-                    'DATE': DATE}
-            return output
-                    
-        except Exception as err:
-            settings.LOGGER.error(f"lacentrale {err}")
-            return {}
-
-
 class AnnonceListScrapper:
     """ from a annonce searche url, get all page in pagination,  """
 
@@ -187,6 +151,7 @@ class AnnonceListScrapper:
         self.kwargs = kwargs
         self.has_next = True
         self.save_count = 0
+        self.toolbox = toolbox_chooser(self.base_url)
         
         self.get_urls()
         
@@ -202,13 +167,13 @@ class AnnonceListScrapper:
             index_html = session.get_html_text()
             
             # get page urls
-            url_list = self.get_annonces_url(index_html)
+            url_list = self.toolbox.get_ad_urls(index_html)
             
             # record page urls
             self.record_annonce_url(url_list)
             
             # set new index url
-            next_page_path = self.get_next_page_url(index_html)
+            next_page_path = self.toolbox.get_next_page_url(index_html)
             if next_page_path:
                 self.index_url = self.base_url._replace(path=next_page_path)
                 
@@ -216,20 +181,6 @@ class AnnonceListScrapper:
                 self.has_next = False
                 
 
-    @soup
-    def get_annonces_url(self, html, **kwargs):
-        """ from a given html page, get all add url paths """
-        
-        url_list = []
-        for e in kwargs['soup'].find_all("div", {"class": "adContainer"}):
-            sub_soup = BeautifulSoup(e.decode_contents(), "html.parser")
-
-            temp_ad_url = self.base_url._replace(path=sub_soup.find("a")['href'])
-            url_list.append(temp_ad_url)
-            
-        return url_list
-            
-    
     def record_annonce_url(self, url_list):
         """ from a given url, record it in DB """
         
@@ -244,17 +195,6 @@ class AnnonceListScrapper:
                 settings.LOGGER.error(f"save annonce url error {err}")
                 
     
-    @soup
-    def get_next_page_url(self, html, **kwargs):
-        """ from a given html page, returns next page url if there is a next page
-        otherwise retunrs None """
-        
-        try:
-            return kwargs['soup'].find("a", {"title": "Page suivante"})['href']
-        except:
-            return None
-
-
     def get_base_url(self):
         """ returns the base url of index """
         
@@ -262,6 +202,7 @@ class AnnonceListScrapper:
         base_url = base_url._replace(query='')
         return base_url._replace(fragment='')   
     
+
     def success_log_record(self):
         settings.LOGGER.info(f"Annonce list scrapper: {try_count} annonces saved")
   
@@ -273,16 +214,19 @@ class AnnonceScrapper:
     def __init__(self, url):
         self.url_object = url
         self.url_parsed = urlparse(url.URL)     
+        self.toolbox = toolbox_chooser(self.url_parsed)  
+
         self.get_data_from_url()
         self.save_annonce()
+
 
     def get_data_from_url(self):
         """ scrape data from url """
         
         session = GetHtmlSession(self.url_parsed.geturl())
         html = session.get_html_text()
-        parser = DataParser()
-        self.data_dict = parser.scrap_lacentrale(html)
+        self.data_dict = self.toolbox.get_data_from_html(html)
+
 
     def save_annonce(self):
         """ save data from dict into annonce table """
