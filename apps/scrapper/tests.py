@@ -1,8 +1,9 @@
 from django.test import TestCase
 from django.conf import settings
+from urllib.parse import urlparse
 
 from apps.scrapper.scrapper import GetHtmlSession
-from apps.scrapper.target import toolbox_chooser
+from apps.scrapper.toolbox import toolbox_chooser
 from apps.scrapper.scrapper import AnnonceListScrapper
 from apps.scrapper.models import Url
 
@@ -42,15 +43,18 @@ Publié depuis : <strong>60 jours</strong>
 
     
     def test_returns_empty_dict_if_missing_data(self):
-        toolbox = toolbox_chooser("www.lacentrale.fr")
+        url_parsed = urlparse('https://www.lacentrale.fr/')
+        toolbox = toolbox_chooser(url_parsed)
         self.assertEqual(toolbox.get_data_from_html("some_html"), None)
         
     def test_returns_full_dict_if_data_are_ok(self):
-        toolbox = toolbox_chooser("www.lacentrale.fr")
+        url_parsed = urlparse('https://www.lacentrale.fr/')
+        toolbox = toolbox_chooser(url_parsed)
         self.assertEqual(isinstance(toolbox.get_data_from_html(self.html_lacentrale), dict), True)
          
     def test_get_next_page_url(self): 
-        toolbox = toolbox_chooser("www.lacentrale.fr")
+        url_parsed = urlparse('https://www.lacentrale.fr/')
+        toolbox = toolbox_chooser(url_parsed)
         self.assertEqual(isinstance(toolbox.get_next_page_url(self.html_lacentrale) , str), True)
         
         
