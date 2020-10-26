@@ -1,3 +1,4 @@
+from requests_html import AsyncHTMLSession
 from datetime import datetime, timedelta
 from apps.annonce.models import Annonce 
 from fake_useragent import UserAgent
@@ -15,11 +16,10 @@ import os
 
 
 
-
 class GetHtmlSession:
     """ Build session and retrieve html source """
     
-    def __init__(self, url, **kwargs):
+    def __init__(self, url, is_async=False, **kwargs):
         self.proxy_count = 0
         self.proxy_num = 0
         self.user_agent = UserAgent()
@@ -41,8 +41,22 @@ class GetHtmlSession:
         self.get_proxies()
         
         # Get response
-        self.get_response()
+        if is_async:
+            self.get_async_response()
+        else:
+            self.get_response()
         
+    def set_session(self, session):
+        """ set proxies and headers """
+
+        session.proxies = {"http": f"http://{self.get_proxy_http()}", 
+                           "https": f"https://{self.get_proxy_https()}"}
+        headers = requests.utils.default_headers()
+        headers.update({'User-Agent': self.user_agent.random})
+        session.headers = headers
+
+        return session
+
         
     def get_response(self):
         """ 
@@ -55,12 +69,8 @@ class GetHtmlSession:
             
             # Setup proxy and header for get request
             session = requests.Session()
-            session.proxies = {"http": f"http://{self.get_proxy_http()}", 
-                               "https": f"https://{self.get_proxy_https()}"}
-            headers = requests.utils.default_headers()
-            headers.update({'User-Agent': self.user_agent.random})
-            session.headers = headers
-            
+            session = self.set_session(session)
+
             # Submit request
             try:
                 time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
@@ -88,6 +98,44 @@ class GetHtmlSession:
                 
             try_count += 1
 
+
+    async def get_async_response(self):
+        """ 
+        Submit request until response is 200 
+        Use proxies and User agent
+        """
+        try_count = 1
+        start = time.time()
+        while self.status_code != 200:
+            
+            # Setup proxy and header for get request
+            asession = AsyncHTMLSession()
+            asession = self.set_session(asession)
+            
+            # Submit request
+            try:
+                time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
+                self.response = await asession.get(self.url.geturl(), timeout=self.session_timeout)
+                self.status_code = self.response.status_code
+                
+            except requests.exceptions.RequestException as err:
+                self.response = requests.Response()
+                self.err = err
+            
+            # Exit if too many fail
+            if self.response.status_code == 200:
+                end = time.time()
+                settings.LOGGER.info(f"Exit code 200 after {try_count} tries")
+                settings.LOGGER.info(f"Response in {end - start} seconds")
+
+            elif self.response.status_code != 200 and try_count == self.max_proxy_try:
+                settings.LOGGER.error(f"get request exceded {try_count} tries")
+                settings.LOGGER.error(f"request error {self.err}")
+                settings.LOGGER.error(f"headers {session.headers}")
+                settings.LOGGER.error(f"proxies {session.proxies}")
+                settings.LOGGER.error(f"url {self.url.geturl()}")
+                break
+                
 
     def get_proxies(self):
         """ Get proxies list """
@@ -151,7 +199,8 @@ class AnnonceListScrapper:
         self.has_next = True
         self.save_count = 0
         self.toolbox = toolbox_chooser(self.base_url)
-        
+        self.is_async = self.toolbox.is_async
+
         self.get_urls()
         
 
@@ -162,7 +211,7 @@ class AnnonceListScrapper:
         while self.has_next:
         
             # get page html
-            session = GetHtmlSession(self.index_url.geturl())
+            session = GetHtmlSession(self.index_url.geturl(), self.is_async)
             index_html = session.get_html_text()
             
             # get page urls
@@ -214,6 +263,7 @@ class AnnonceScrapper:
         self.url_object = url
         self.url_parsed = urlparse(url.URL)     
         self.toolbox = toolbox_chooser(self.url_parsed)  
+        self.is_async = self.toolbox.is_async
 
         self.get_data_from_url()
         self.save_annonce()
@@ -222,7 +272,7 @@ class AnnonceScrapper:
     def get_data_from_url(self):
         """ scrape data from url """
         
-        session = GetHtmlSession(self.url_parsed.geturl())
+        session = GetHtmlSession(self.url_parsed.geturl(), self.is_async)
         html = session.get_html_text()
         self.data_dict = self.toolbox.get_data_from_html(html)
 
