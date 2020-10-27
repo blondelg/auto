@@ -14,6 +14,8 @@ import time
 import json
 import os
 
+import asyncio
+import nest_asyncio
 
 
 class GetHtmlSession:
@@ -26,7 +28,7 @@ class GetHtmlSession:
         self.status_code = 0
         self.err = ''
         self.url = urlparse(url)
-
+        self.is_async = is_async
         # Change default settings if needed
         self.session_timeout = kwargs.get('session_timeout',
                 int(settings.CONFIG['SCRAPPER']['session_timeout']))
@@ -41,10 +43,7 @@ class GetHtmlSession:
         self.get_proxies()
         
         # Get response
-        if is_async:
-            self.get_async_response()
-        else:
-            self.get_response()
+        self.get_response()
         
     def set_session(self, session):
         """ set proxies and headers """
@@ -74,8 +73,15 @@ class GetHtmlSession:
             # Submit request
             try:
                 time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
-                
-                self.response = session.get(self.url.geturl(), timeout=self.session_timeout)
+
+                if self.is_async:
+                    nest_asyncio.apply()
+                    loop = asyncio.get_event_loop()
+                    self.response = loop.run_until_complete(self.get_async_response())
+                else:    
+                    self.response = session.get(self.url.geturl(), timeout=self.session_timeout)
+
+
                 self.status_code = self.response.status_code
                 
             except requests.exceptions.RequestException as err:
@@ -100,42 +106,14 @@ class GetHtmlSession:
 
 
     async def get_async_response(self):
-        """ 
-        Submit request until response is 200 
-        Use proxies and User agent
         """
-        try_count = 1
-        start = time.time()
-        while self.status_code != 200:
-            
-            # Setup proxy and header for get request
-            asession = AsyncHTMLSession()
-            asession = self.set_session(asession)
-            
-            # Submit request
-            try:
-                time.sleep(random.randrange(self.min_sleep_time,self.max_sleep_time))
-                self.response = await asession.get(self.url.geturl(), timeout=self.session_timeout)
-                self.status_code = self.response.status_code
-                
-            except requests.exceptions.RequestException as err:
-                self.response = requests.Response()
-                self.err = err
-            
-            # Exit if too many fail
-            if self.response.status_code == 200:
-                end = time.time()
-                settings.LOGGER.info(f"Exit code 200 after {try_count} tries")
-                settings.LOGGER.info(f"Response in {end - start} seconds")
 
-            elif self.response.status_code != 200 and try_count == self.max_proxy_try:
-                settings.LOGGER.error(f"get request exceded {try_count} tries")
-                settings.LOGGER.error(f"request error {self.err}")
-                settings.LOGGER.error(f"headers {session.headers}")
-                settings.LOGGER.error(f"proxies {session.proxies}")
-                settings.LOGGER.error(f"url {self.url.geturl()}")
-                break
-                
+        """
+        asession = AsyncHTMLSession()
+        #  asession = self.set_session(asession)
+        aresponse = asession.get(self.url.geturl())
+        return await aresponse
+
 
     def get_proxies(self):
         """ Get proxies list """

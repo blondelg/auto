@@ -119,7 +119,8 @@ class LeboncoinToolbox:
 
         url_list = []
         for e in kwargs['soup'].find_all("a", {"class": "clearfix trackable"}):
-            url_list.append(e['href'])
+            temp_ad_url = self.base_url._replace(path=e['href'])
+            url_list.append(temp_ad_url)
 
         return url_list
         
@@ -145,7 +146,7 @@ class LeboncoinToolbox:
         """
 
         try:
-            json_data = json.loads(kwargs['soup'].find("script", {"id": "__NEXT_DATA__"}).getText())
+            json_data = json.loads(kwargs['soup'].find("script", {"id": "__NEXT_DATA__"}).contents[0])
             #  age = kwargs['soup'].find("div", {"class": "cbm-toolboxButtons"}).span.strong.getText()
             #  age = age.strip().split(" ")[0]
             str_date = json_data['props']['pageProps']['ad']['first_publication_date'] 
@@ -156,8 +157,8 @@ class LeboncoinToolbox:
             for e in attribute_list:
                 attributes[e['key']] = e['value']
 
-            ENERGIE_MAP = {1: 'ESSENCE', 
-                           2: 'DIESEL'}
+            ENERGIE_MAP = {'1': 'ESSENCE', 
+                           '2': 'DIESEL'}
 
             output = {'PRIX': json_data['props']['pageProps']['ad']['price'][0],
                       'MARQUE': attributes['brand'].upper(),
