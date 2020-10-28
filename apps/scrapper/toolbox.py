@@ -132,10 +132,10 @@ class LeboncoinToolbox:
         or returns None 
         """
 
-        try:
-            return kwargs['soup'].find("a", {"class": "_1f-eo"})['href']
-        except:
-            return None
+        for tag in kwargs['soup'].find_all("a", {"class": "_1f-eo"}):
+            if tag.find("span", {"name": "chevronright"}):
+                return tag['href']
+        return None
 
 
     @soup

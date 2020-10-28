@@ -202,6 +202,7 @@ class AnnonceListScrapper:
             next_page_path = self.toolbox.get_next_page_url(index_html)
             if next_page_path:
                 self.index_url = self.base_url._replace(path=next_page_path)
+                print("DEBUG NEXT PAGE :", self.index_url)
                 
             else:
                 self.has_next = False
@@ -214,6 +215,8 @@ class AnnonceListScrapper:
         # Not using Django's bulk_create() as the process is very slow due to scrapping bot
         for url in url_list:
             temp_url = Url(URL=url.geturl())
+            print("DEBUG RECORD URL :", temp_url)
+            print("DEBUG RECORD URL :", url.geturl())
             try:
                 temp_url.save()
                 self.save_count += 1
