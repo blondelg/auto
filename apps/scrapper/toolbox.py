@@ -95,7 +95,7 @@ class LacentraleToolbox:
                     
         except Exception as err:
             settings.LOGGER.error(f"lacentrale {err}")
-            return None
+            return {} 
 
 
 
@@ -173,7 +173,7 @@ class LeboncoinToolbox:
                     
         except Exception as err:
             settings.LOGGER.error(f"leboncoin {err}")
-            return None
+            return {} 
 
 
 

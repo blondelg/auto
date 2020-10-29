@@ -48,8 +48,8 @@ class GetHtmlSession:
     def set_session(self, session):
         """ set proxies and headers """
 
-        session.proxies = {"http": f"http://{self.get_proxy_http()}", 
-                           "https": f"https://{self.get_proxy_https()}"}
+        #  session.proxies = {"http": f"http://{self.get_proxy_http()}",
+        session.proxies = {"https": f"https://{self.get_proxy_https()}"}
         headers = requests.utils.default_headers()
         headers.update({'User-Agent': self.user_agent.random})
         session.headers = headers
@@ -92,7 +92,7 @@ class GetHtmlSession:
             if self.response.status_code == 200:
                 end = time.time()
                 settings.LOGGER.info(f"Exit code 200 after {try_count} tries")
-                settings.LOGGER.info(f"Response in {end - start} seconds")
+                settings.LOGGER.info(f"Response in {round(end - start, 2)} seconds")
 
             elif self.response.status_code != 200 and try_count == self.max_proxy_try:
                 settings.LOGGER.error(f"get request exceded {try_count} tries")
@@ -107,7 +107,7 @@ class GetHtmlSession:
 
     async def get_async_response(self):
         """
-
+        define async get response to have the JS executed
         """
         asession = AsyncHTMLSession()
         #  asession = self.set_session(asession)
@@ -119,10 +119,10 @@ class GetHtmlSession:
         """ Get proxies list """
         
         try:
-            url_http = 'https://www.proxy-list.download/api/v1/get?type=http'
-            response = requests.get(url_http, timeout=self.session_timeout)
-            proxy_list = response.text.split("\r\n")
-            self.proxy_pool_http = it.cycle(proxy_list)
+            #  url_http = 'https://www.proxy-list.download/api/v1/get?type=http'
+            #  response = requests.get(url_http, timeout=self.session_timeout)
+            #  proxy_list = response.text.split("\r\n")
+            #  self.proxy_pool_http = it.cycle(proxy_list)
 
             url_https = 'https://www.proxy-list.download/api/v1/get?type=https'
             response = requests.get(url_https, timeout=self.session_timeout)
@@ -153,6 +153,8 @@ class GetHtmlSession:
         """
         
         self.proxy_count += 1
+        if self.proxy_count > self.proxy_num: self.get_proxies()
+
         return next(self.proxy_pool_https)
 
     
@@ -168,7 +170,6 @@ class GetHtmlSession:
 class AnnonceListScrapper:
     """ from a annonce searche url, get all page in pagination,  """
 
-    
     def __init__(self, index_url, **kwargs):
         self.index_url = urlparse(index_url)
         self.base_url = self.get_base_url()
@@ -177,10 +178,11 @@ class AnnonceListScrapper:
         self.has_next = True
         self.save_count = 0
         self.toolbox = toolbox_chooser(self.base_url)
-        self.is_async = self.toolbox.is_async
-
-        self.get_urls()
-        
+        if self.toolbox is None:
+            settings.LOGGER.error(f"no toolbox for {self.base_url.netloc}")
+        else:
+            self.is_async = self.toolbox.is_async
+            self.get_urls()
 
 
     def get_urls(self):
@@ -202,7 +204,6 @@ class AnnonceListScrapper:
             next_page_path = self.toolbox.get_next_page_url(index_html)
             if next_page_path:
                 self.index_url = self.base_url._replace(path=next_page_path)
-                print("DEBUG NEXT PAGE :", self.index_url)
                 
             else:
                 self.has_next = False
@@ -215,11 +216,12 @@ class AnnonceListScrapper:
         # Not using Django's bulk_create() as the process is very slow due to scrapping bot
         for url in url_list:
             temp_url = Url(URL=url.geturl())
-            print("DEBUG RECORD URL :", temp_url)
-            print("DEBUG RECORD URL :", url.geturl())
             try:
                 temp_url.save()
                 self.save_count += 1
+
+                settings.LOGGER.info(f"url saved : {url.geturl()}")
+
             except Exception as err:
                 settings.LOGGER.error(f"save annonce url error {err}")
                 
@@ -266,6 +268,8 @@ class AnnonceScrapper:
             annonce.URL = self.url_object
             annonce.save()
             Url.objects.filter(pk=self.url_object.pk).update(STATUS = 'VALIDE')
+
+            settings.LOGGER.info(f"ad saved : {annonce.URL}")
             
         except Exception as err:
             settings.LOGGER.error(f"save annonce error : {err} for {self.url_parsed.geturl()}")

@@ -45,7 +45,7 @@ Publié depuis : <strong>60 jours</strong>
     def test_returns_empty_dict_if_missing_data(self):
         url_parsed = urlparse('https://www.lacentrale.fr/')
         toolbox = toolbox_chooser(url_parsed)
-        self.assertEqual(toolbox.get_data_from_html("some_html"), None)
+        self.assertEqual(toolbox.get_data_from_html("some_html"), {})
         
     def test_returns_full_dict_if_data_are_ok(self):
         url_parsed = urlparse('https://www.lacentrale.fr/')
