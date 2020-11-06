@@ -10,16 +10,13 @@ ENV PYTHONUNBUFFERED 1
 EXPOSE 8000
 VOLUME /data
 
-# Install dependancies
-RUN apt-get update && apt-get install -y \
-	vim \
-	git \
-	&& rm -rf /var/lib/apt/lists/*
-
 # Setup python dependancies
-RUN git clone https://github.com/blondelg/auto.git
+RUN mkdir auto
 WORKDIR /auto
+COPY . /auto/
 RUN cd /auto
+RUN echo "DEBUG COPY CHECK"
+RUN ls -l
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Build the secret key generator
