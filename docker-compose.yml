@@ -2,7 +2,7 @@ version: "3"
 services:
     database:
         image: mariadb
-        #network_mode: bridge
+        network_mode: bridge
         container_name: database
         ports: 
             - "3306:3306"
@@ -12,7 +12,7 @@ services:
         hostname: 'database'
     runserver:
         build: .
-        #network_mode: bridge
+        network_mode: bridge
         command: python /auto/manage.py runserver 0.0.0.0:8000 
         #volumes:
         #    - .:/auto
