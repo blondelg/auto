@@ -11,7 +11,8 @@ services:
             - MYSQL_DATABASE=autodb
         hostname: 'database'
     runserver:
-        build: .
+        #build: .
+        image: python
         network_mode: bridge
         #command: python /auto/manage.py runserver 0.0.0.0:8000 
         #volumes:
