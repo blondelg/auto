@@ -6,6 +6,8 @@ MAINTAINER geoffroy
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
+EXPOSE 8000
+
 # Setup python dependancies
 RUN mkdir /auto
 WORKDIR /auto
