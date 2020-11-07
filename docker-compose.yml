@@ -3,7 +3,7 @@ services:
     database:
         image: mariadb
         network_mode: bridge
-        #container_name: database
+        container_name: database
         ports: 
             - "3306:3306"
         environment:
@@ -15,7 +15,7 @@ services:
         command: python /auto/manage.py runserver 0.0.0.0:8000 
         #volumes:
         #    - .:/auto
-        #container_name: runserver
+        container_name: runserver
         ports:
             - "8000:8000"
         depends_on:
