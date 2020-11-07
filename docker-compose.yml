@@ -17,7 +17,7 @@ services:
         volumes:
             - .:/auto
         container_name: runserver
-        ports:
-            - "8000:8000"
+        #ports:
+        #    - "8000:8000"
         depends_on:
             - database
