@@ -4,6 +4,7 @@ services:
         image: mariadb
         network_mode: bridge
         container_name: database
+        hostname: database
         ports: 
             - "3306:3306"
         environment:
