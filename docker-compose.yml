@@ -28,4 +28,4 @@ services:
         networks:
             - minitel
     networks:
-      minitel:
+        minitel:
