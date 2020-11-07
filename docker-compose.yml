@@ -9,7 +9,8 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=root
             - MYSQL_DATABASE=autodb
-        hostname: 'database'
+        networks: 
+            - backend
     runserver:
         build: .
         network_mode: bridge
@@ -21,3 +22,8 @@ services:
             - "8000:8000"
         depends_on:
             - database
+        networks: 
+            - backend
+    networks:
+        backend:
+          driver: "bridge"
