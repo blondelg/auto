@@ -6,14 +6,12 @@ MAINTAINER geoffroy
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
 
-# Ports exposure
-EXPOSE 8000
-
 # Setup python dependancies
 RUN mkdir /auto
 WORKDIR /auto
 COPY . /auto/
 RUN cd /auto
+RUN pwd
 RUN echo "DEBUG COPY CHECK"
 RUN ls -l
 RUN pip install --no-cache-dir -r requirements.txt
