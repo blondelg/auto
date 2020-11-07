@@ -8,7 +8,6 @@ ENV PYTHONUNBUFFERED 1
 
 # Ports exposure
 EXPOSE 8000
-VOLUME /data
 
 # Setup python dependancies
 RUN mkdir auto
