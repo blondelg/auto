@@ -13,9 +13,6 @@ RUN mkdir /auto
 WORKDIR /auto
 COPY . /auto/
 RUN cd /auto
-RUN pwd
-RUN echo "DEBUG COPY CHECK"
-RUN ls -l
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Build the secret key generator
@@ -31,7 +28,5 @@ RUN sed -i "s/USER_PATTERN/root/gI" config/config.ini
 RUN sed -i "s/PASSWORD_PATTERN/root/gI" config/config.ini
 RUN sed -i "s/HOST_PATTERN/database/gI" config/config.ini
 RUN sed -i "s/PORT_PATTERN/3306/gI" config/config.ini
-RUN echo "DISPLAY CONFIG FILE"
-RUN cat config/config.ini
 # Start service when runs
 # CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
