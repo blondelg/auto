@@ -10,10 +10,6 @@ services:
         environment:
             - MYSQL_ROOT_PASSWORD=root
             - MYSQL_DATABASE=autodb
-        networks:
-            minitel:
-                aliases:
-                    - database
     runserver:
         build: .
         network_mode: bridge
@@ -25,7 +21,3 @@ services:
             - "8000:8000"
         depends_on:
             - database
-        networks:
-            - minitel
-    networks:
-        minitel:
