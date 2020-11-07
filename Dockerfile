@@ -10,7 +10,7 @@ ENV PYTHONUNBUFFERED 1
 EXPOSE 8000
 
 # Setup python dependancies
-RUN mkdir auto
+RUN mkdir /auto
 WORKDIR /auto
 COPY . /auto/
 RUN cd /auto
