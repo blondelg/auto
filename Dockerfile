@@ -11,7 +11,7 @@ EXPOSE 8000
 # Setup python dependancies
 RUN mkdir /auto
 WORKDIR /auto
-COPY ../../. /auto/
+COPY . /auto/
 RUN cd /auto
 RUN pip install --no-cache-dir -r requirements.txt
 
