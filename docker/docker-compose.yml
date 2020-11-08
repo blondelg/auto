@@ -1,0 +1,29 @@
+version: "3"
+services:
+    database:
+        image: mariadb
+        #network_mode: bridge
+        container_name: database
+        hostname: database
+        ports: 
+            - "3306:3306"
+        environment:
+            - MYSQL_ROOT_PASSWORD=root
+            - MYSQL_DATABASE=autodb
+        networks:
+            - minitel
+    runserver:
+        build: .
+        #network_mode: bridge
+        #volumes:
+        #    - .:/auto
+        container_name: runserver
+        ports:
+            - "8000:8000"
+        depends_on:
+            - database
+        #command: python /auto/manage.py runserver 0.0.0.0:8000 
+        networks:
+            - minitel
+networks:
+    minitel:

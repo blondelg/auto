@@ -28,3 +28,5 @@ RUN sed -i "s/USER_PATTERN/root/gI" config/config.ini
 RUN sed -i "s/PASSWORD_PATTERN/root/gI" config/config.ini
 RUN sed -i "s/HOST_PATTERN/database/gI" config/config.ini
 RUN sed -i "s/PORT_PATTERN/3306/gI" config/config.ini
+# Start service when runs
+# CMD ["./manage.py", "runserver", "0.0.0.0:8000"]
