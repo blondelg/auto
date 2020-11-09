@@ -47,7 +47,7 @@ class LacentraleToolbox:
         """ from a index html, returns all ad urls """
 
         url_list = []
-        for e in kwargs['soup'].find_all("div", {"class": "adContainer"}):
+        for e in kwargs['soup'].find_all("div", {"class": "adLineContainer"}):
             sub_soup = BeautifulSoup(e.decode_contents(), "html.parser")
 
             temp_ad_url = self.base_url._replace(path=sub_soup.find("a")['href'])
