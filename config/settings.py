@@ -36,6 +36,7 @@ INSTALLED_APPS = [
     
     'apps.annonce',
     'apps.scrapper',
+    'django_jenkins',
 ]
 
 if DEBUG:
@@ -171,7 +172,7 @@ LOGGING = {
             'class': 'logging.handlers.TimedRotatingFileHandler',
             'when': 'D',
             'interval': 1,
-            'backupCount': CONFIG['GENERAL']['LOG_BACKUP_DAYS'],
+            'backupCount': int(CONFIG['GENERAL']['LOG_BACKUP_DAYS']),
             'encoding': 'utf8',
             'filename': os.path.join(log_path, log_name),
             'formatter': 'verbose',
