@@ -36,7 +36,6 @@ INSTALLED_APPS = [
     
     'apps.annonce',
     'apps.scrapper',
-    'django_jenkins',
 ]
 
 if DEBUG:

@@ -29,6 +29,8 @@ class Command(BaseCommand):
 
         else:
             # Get all ATTENTE Urls
-            for url in Url.objects.filter(STATUS = 'ATTENTE'):
-                AnnonceScrapper(url)
+            while Url().has_status():
+                temp_url = Url().get_random_url() 
+                AnnonceScrapper(temp_url)
+
 

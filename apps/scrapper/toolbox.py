@@ -118,7 +118,7 @@ class LeboncoinToolbox:
         """ from a index html, returns all ad urls """
 
         url_list = []
-        for e in kwargs['soup'].find_all("a", {"class": "clearfix trackable"}):
+        for e in kwargs['soup'].find_all("a", {"data-qa-id": "aditem_container"}):
             temp_ad_url = self.base_url._replace(path=e['href'])
             url_list.append(temp_ad_url)
 
@@ -132,9 +132,10 @@ class LeboncoinToolbox:
         or returns None 
         """
 
-        for tag in kwargs['soup'].find_all("a", {"class": "_1f-eo"}):
-            if tag.find("span", {"name": "chevronright"}):
-                return tag['href']
+        for tag in kwargs['soup'].find_all("a", {"title": "Page suivante"}):
+            return tag['href']
+            #if tag.find("span", {"name": "chevronright"}):
+            #    return tag['href']
         return None
 
 

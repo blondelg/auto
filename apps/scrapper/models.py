@@ -2,6 +2,7 @@ from urllib.parse import urlparse
 from django.conf import settings
 from datetime import datetime
 from django.db import models
+import random
 
 
 class Url(models.Model):
@@ -40,14 +41,33 @@ class Url(models.Model):
         """ from a given url, retunrs a Cible object """
         domaine = urlparse(self.URL).netloc
         return Cible.objects.get(DOMAINE = domaine)
+
+    def get_random_url(self, status='ATTENTE'):
+        """ retunrs a random url ubject """
+        pk_queryset = Url.objects.filter(STATUS=status).values_list("pk")
+        pk_list = [e[0] for e in list(pk_queryset)]
+        if len(pk_list) == 0:
+            return None 
+        else:
+            pk_random = random.choice(pk_list)
+            return Url.objects.get(pk=pk_random)
+
+    def has_status(self, status='ATTENTE'):
+        """ returns True if there is some urls with th
+        corresponding status"""
+        count = Url.objects.filter(STATUS=status).count()
+        if count == 0:
+            return False
+        else:
+            return True
         
     class Meta:
         unique_together = ['URL']
 
 
 class Cible(models.Model):
-    DOMAINE = models.URLField(max_length=20)
-    CIBLE = models.URLField(max_length=20)
+    DOMAINE = models.CharField(max_length=20)
+    CIBLE = models.CharField(max_length=20)
     
     def __repr__(self):
         return f'<Cible: {self.CIBLE}>'
